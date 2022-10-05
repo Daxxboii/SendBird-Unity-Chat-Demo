@@ -76,8 +76,8 @@ public class SendBirdManager : MonoBehaviour
 
      #endregion
 
-
-    public void StartGroup()
+    //Call This Function When a Clan is Created
+    public void StartGroup(string ClanName)
     {
         GroupChannel.CreateChannelWithUserIds(ListOfNames, false, (GroupChannel groupChannel, SendBirdException e) =>
         {
