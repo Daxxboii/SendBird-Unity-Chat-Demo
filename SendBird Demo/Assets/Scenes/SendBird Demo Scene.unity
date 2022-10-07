@@ -965,8 +965,7 @@ MonoBehaviour:
   ViewPrivateChatHistory: 0
   ClanName: Clan #1
   ClanImage: {fileID: 0}
-  URL: 
-  Description: 
+  URL: groupchat
   ViewGroupChatHistory: 1
 --- !u!4 &898651543
 Transform:
@@ -1066,7 +1065,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 977231537}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 898651542}
+        m_TargetAssemblyTypeName: SendBirdManager, Assembly-CSharp
+        m_MethodName: StartGroup
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Test Clan
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &977231537
 MonoBehaviour:
   m_ObjectHideFlags: 0

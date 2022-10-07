@@ -9,6 +9,7 @@ public class SendBirdManager : MonoBehaviour
 {
 
     public string User;
+    public static SendBirdManager instance;
 
     [Foldout("Chat Settings",true)]
     public bool ReadReceipts;
@@ -23,22 +24,25 @@ public class SendBirdManager : MonoBehaviour
     public string ClanName;
     public Texture2D ClanImage;
     public string URL;
-    public string Description;
-    public List<SendBird.User> ClanMembers;
+    //public string Description;
     public bool ViewGroupChatHistory;
 
     private List<string> ListOfNames;
+
+    private string ProfileUrl;
+    
 
 
 
     private void Awake()
     {
-        ListOfNames = new List<string>();
-        ListOfNames.Add("River Testing");
-        ListOfNames.Add("Daxx");
-        InitializeSendBird();
-        ConnectToServer();
-        SetHandlers();
+        if (instance == null) instance = this;
+       ListOfNames = new List<string>();
+       ListOfNames.Add(User);
+       InitializeSendBird();
+       ConnectToServer();
+       SetHandlers();
+
     }
 
     #region Initialize
@@ -55,22 +59,37 @@ public class SendBirdManager : MonoBehaviour
     {
         SendBirdClient.Connect(User, (User user, SendBirdException e) =>
         {
+        ProfileUrl = user.ProfileUrl;
+       
             if (e != null)
             {
+                Debug.LogError(e);
                 return; // Handle error.
             }
             else
             {
                 Debug.Log("Connected");
+
+                SendBirdClient.UpdateCurrentUserInfo(User, ProfileUrl, (SendBirdException e) => 
+                { 
+                    if(e != null)
+                    {
+                        Debug.LogError(e);
+                    }
+                });
             }
         });
+
     }
 
     private void SetHandlers()
     {
         SendBirdClient.ChannelHandler channelHandler = new SendBirdClient.ChannelHandler();
 
-        channelHandler.OnMessageReceived = (BaseChannel baseChannel, BaseMessage baseMessage) => { Debug.Log(baseMessage); };
+        channelHandler.OnMessageReceived = (BaseChannel baseChannel, BaseMessage baseMessage) => { 
+            Debug.Log(baseMessage.UserId);
+            Debug.Log(baseMessage.Message);
+        };
         SendBirdClient.AddChannelHandler("UniqueID", channelHandler);
     }
 
@@ -79,7 +98,7 @@ public class SendBirdManager : MonoBehaviour
     //Call This Function When a Clan is Created
     public void StartGroup(string ClanName)
     {
-        GroupChannel.CreateChannelWithUserIds(ListOfNames, false, (GroupChannel groupChannel, SendBirdException e) =>
+        GroupChannel.CreateChannelWithUserIds(ListOfNames,false,ClanName,URL,(GroupChannel groupChannel, SendBirdException e) =>
         {
             if (e != null)
             {
@@ -93,9 +112,10 @@ public class SendBirdManager : MonoBehaviour
             string CustomType = groupChannel.CustomType;
             string ChanneUrl = groupChannel.Url;
 
+
             groupChannel.SendUserMessage("hello", "Message", (UserMessage userMessage, SendBirdException e) =>
             {
-                Debug.Log(userMessage.Message);
+               // Debug.Log(userMessage.Message);
             });
             
         });
@@ -111,7 +131,7 @@ public class SendBirdManager : MonoBehaviour
 
     public void UpdateGroup()
     {
-        
+       
 
     }
 
