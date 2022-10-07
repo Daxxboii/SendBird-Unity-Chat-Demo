@@ -10,25 +10,35 @@ public class MenuChatManager : MonoBehaviour
     [Foldout("Menu", true)]
     [SerializeField] private GameObject ChatArea;
     [SerializeField] private GameObject ChatPrefab;
-    private TextMeshProUGUI ChatText;
-    private InputField ClanName;
+
+    [SerializeField]private TMP_InputField ChatText;
+
+
     private List<GameObject> ChatPrefabs;
 
 
-    private void Start()
+    public void CreateClan(string ClanName)
     {
-        
+        SendBirdManager.instance.CreateClan(ClanName);
     }
 
-    void CreateClan(string ClanName)
+    public void EnterClan()
     {
-        SendBirdManager.instance.StartGroup(ClanName);
+        SendBirdManager.instance.EnterClan();
     }
 
-    void EnterClan()
-    {
 
+    public void SendMessage()
+    {
+        string Message = ChatText.text;
+        SendBirdManager.instance.SendMessage(Message);
     }
+
+    public void Leave()
+    {
+        SendBirdManager.instance.LeaveClan();
+    }
+
 
 
 

@@ -21,15 +21,14 @@ public class SendBirdManager : MonoBehaviour
    
 
     [Foldout("Group Chat",true)]
-    public string ClanName;
-    public Texture2D ClanImage;
     public string URL;
-    //public string Description;
     public bool ViewGroupChatHistory;
 
-    private List<string> ListOfNames;
+    private List<string> ListOfPeopleInClan;
 
     private string ProfileUrl;
+
+    GroupChannel currentClan;
     
 
 
@@ -37,8 +36,11 @@ public class SendBirdManager : MonoBehaviour
     private void Awake()
     {
         if (instance == null) instance = this;
-       ListOfNames = new List<string>();
-       ListOfNames.Add(User);
+
+       ListOfPeopleInClan = new List<string>();
+       ListOfPeopleInClan.Add(User);
+
+
        InitializeSendBird();
        ConnectToServer();
        SetHandlers();
@@ -95,10 +97,49 @@ public class SendBirdManager : MonoBehaviour
 
      #endregion
 
-    //Call This Function When a Clan is Created
-    public void StartGroup(string ClanName)
+    void AddPersonToClan(string Name)
     {
-        GroupChannel.CreateChannelWithUserIds(ListOfNames,false,ClanName,URL,(GroupChannel groupChannel, SendBirdException e) =>
+        List<string> Names = new List<string>();
+        Names.Add(Name);
+
+        currentClan.InviteWithUserIds(Names, (SendBirdException e) =>
+        {
+            if (e != null)
+            {
+                // Handle error.
+            }
+        });
+    }
+
+    void KickPersonFromClan(string UserID)
+    {
+
+        currentClan.BanUserWithUserId(UserID,"trolling",1000000, (SendBirdException e) =>
+        {
+            if (e != null)
+            {
+                // Handle error.
+            }
+        });
+    }
+
+    public void LeaveClan()
+    {
+        currentClan.Leave((SendBirdException e) =>
+        {
+            if (e != null)
+            {
+                // Handle error.
+            }
+        });
+    }
+
+    
+
+    //Call This Function When a Clan is Created
+    public void CreateClan(string ClanName)
+    {
+        GroupChannel.CreateChannelWithUserIds(ListOfPeopleInClan,false,(GroupChannel groupChannel, SendBirdException e) =>
         {
             if (e != null)
             {
@@ -108,31 +149,31 @@ public class SendBirdManager : MonoBehaviour
             else
             {
                 Debug.Log("Group Created");
+                currentClan = groupChannel;
+                URL = groupChannel.Url;
+                EnterClan();
             }
-            string CustomType = groupChannel.CustomType;
-            string ChanneUrl = groupChannel.Url;
-
-
-            groupChannel.SendUserMessage("hello", "Message", (UserMessage userMessage, SendBirdException e) =>
-            {
-               // Debug.Log(userMessage.Message);
-            });
-            
         });
     }
 
-    public void EnterGroup()
+    #region Testing
+    public void EnterClan()
     {
         GroupChannel.GetChannel(URL, (GroupChannel groupChannel, SendBirdException e) =>
         {
-           
+            if (e != null) Debug.LogError(e);
+            else Debug.Log("Entered Successfully");
         });
     }
+    #endregion
 
-    public void UpdateGroup()
+
+    public new void SendMessage(string Message)
     {
-       
-
+        currentClan.SendUserMessage(Message, "Message", (UserMessage userMessage, SendBirdException e) =>
+        {
+            if (e != null) Debug.Log(e);
+        });
     }
 
     private void OnApplicationQuit()
@@ -140,9 +181,6 @@ public class SendBirdManager : MonoBehaviour
         SendBirdClient.RemoveChannelHandler("Ligma");
         SendBirdClient.Disconnect(() =>{ });
     }
-
-
-
-
-
 }
+
+
