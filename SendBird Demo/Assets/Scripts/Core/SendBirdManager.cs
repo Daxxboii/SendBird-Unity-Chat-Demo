@@ -3,20 +3,22 @@ using SendBird;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using static SendBirdManager;
 
 
 public class SendBirdManager : MonoBehaviour
 {
-
-    public string User;
     public static SendBirdManager instance;
+
+    public delegate void OnConnected();
+    public static OnConnected onConnected;
 
     [Foldout("Chat Settings",true)]
     public bool ReadReceipts;
     public bool IsTypingNotification;
 
     [Foldout("Private Chat",true)]
-    public string UserOnOtherEnd;
+   // public string UserOnOtherEnd;
     public bool ViewPrivateChatHistory;
    
 
@@ -24,8 +26,7 @@ public class SendBirdManager : MonoBehaviour
     public string URL;
     public bool ViewGroupChatHistory;
 
-    private List<string> ListOfPeopleInClan;
-
+   
     private string ProfileUrl;
 
     GroupChannel currentClan;
@@ -37,18 +38,16 @@ public class SendBirdManager : MonoBehaviour
     {
         if (instance == null) instance = this;
 
-       ListOfPeopleInClan = new List<string>();
-       ListOfPeopleInClan.Add(User);
-
+      
 
        InitializeSendBird();
-       ConnectToServer();
-       SetHandlers();
+      // ConnectToServer();
+      // SetHandlers();
 
     }
 
     #region Initialize
-    private void InitializeSendBird()
+    public void InitializeSendBird()
     {
         SendBirdClient.SetupUnityDispatcher(gameObject);
         StartCoroutine(SendBirdClient.StartUnityDispatcher);
@@ -57,9 +56,9 @@ public class SendBirdManager : MonoBehaviour
         SendBirdClient.Init("9F8F1088-CF75-45A3-B70C-159F4C8ECF6B");
     }
 
-    private void ConnectToServer()
+    public void ConnectToServer(string Username)
     {
-        SendBirdClient.Connect(User, (User user, SendBirdException e) =>
+        SendBirdClient.Connect(Username, (User user, SendBirdException e) =>
         {
         ProfileUrl = user.ProfileUrl;
        
@@ -70,9 +69,11 @@ public class SendBirdManager : MonoBehaviour
             }
             else
             {
+                onConnected.Invoke();
+                SetHandlers();
                 Debug.Log("Connected");
 
-                SendBirdClient.UpdateCurrentUserInfo(User, ProfileUrl, (SendBirdException e) => 
+                SendBirdClient.UpdateCurrentUserInfo(Username, ProfileUrl, (SendBirdException e) => 
                 { 
                     if(e != null)
                     {
@@ -123,6 +124,8 @@ public class SendBirdManager : MonoBehaviour
         });
     }
 
+   
+
     public void LeaveClan()
     {
         currentClan.Leave((SendBirdException e) =>
@@ -137,9 +140,9 @@ public class SendBirdManager : MonoBehaviour
     
 
     //Call This Function When a Clan is Created
-    public void CreateClan(string ClanName)
+    public void CreateClan(List<string> UserIDS)
     {
-        GroupChannel.CreateChannelWithUserIds(ListOfPeopleInClan,false,(GroupChannel groupChannel, SendBirdException e) =>
+        GroupChannel.CreateChannelWithUserIds(UserIDS, true,(GroupChannel groupChannel, SendBirdException e) =>
         {
             if (e != null)
             {
@@ -151,15 +154,24 @@ public class SendBirdManager : MonoBehaviour
                 Debug.Log("Group Created");
                 currentClan = groupChannel;
                 URL = groupChannel.Url;
-                EnterClan();
+                AdminEnterClan();
             }
         });
     }
 
     #region Testing
-    public void EnterClan()
+    public void AdminEnterClan()
     {
         GroupChannel.GetChannel(URL, (GroupChannel groupChannel, SendBirdException e) =>
+        {
+            if (e != null) Debug.LogError(e);
+            else Debug.Log("Entered Successfully");
+        });
+    }
+
+    public void EnterClanWithURL(string ClanURL)
+    {
+        GroupChannel.GetChannel(ClanURL, (GroupChannel groupChannel, SendBirdException e) =>
         {
             if (e != null) Debug.LogError(e);
             else Debug.Log("Entered Successfully");

@@ -8,23 +8,40 @@ using UnityEngine.UI;
 public class MenuChatManager : MonoBehaviour
 {
     [Foldout("Menu", true)]
+    [SerializeField] private GameObject ChatPanel;
+    [SerializeField] private GameObject UserNamePanel;
+
     [SerializeField] private GameObject ChatArea;
     [SerializeField] private GameObject ChatPrefab;
 
     [SerializeField]private TMP_InputField ChatText;
+    [SerializeField] private TMP_InputField UserName;
+
+    [SerializeField] private string DefaultClanURL;
 
 
     private List<GameObject> ChatPrefabs;
 
+    public List<string> ClanMembers;
 
+    private void Awake()
+    {
+        SendBirdManager.onConnected += Enter;
+    }
     public void CreateClan(string ClanName)
     {
-        SendBirdManager.instance.CreateClan(ClanName);
+       // SendBirdManager.instance.CreateClan(ClanName);
     }
 
-    public void EnterClan()
+    public void Connect()
     {
-        SendBirdManager.instance.EnterClan();
+        SendBirdManager.instance.ConnectToServer(UserName.text);
+
+    }
+
+    void Enter()
+    {
+        SendBirdManager.instance.EnterClanWithURL(DefaultClanURL);
     }
 
 
@@ -38,6 +55,13 @@ public class MenuChatManager : MonoBehaviour
     {
         SendBirdManager.instance.LeaveClan();
     }
+
+    public void CreateClan()
+    {
+        SendBirdManager.instance.CreateClan(ClanMembers);
+    }
+
+
 
 
 
