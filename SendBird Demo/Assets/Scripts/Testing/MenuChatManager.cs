@@ -4,6 +4,7 @@ using UnityEngine;
 using MyBox;
 using TMPro;
 using UnityEngine.UI;
+using System;
 
 public class MenuChatManager : MonoBehaviour
 {
@@ -19,6 +20,8 @@ public class MenuChatManager : MonoBehaviour
 
     [SerializeField] private string DefaultClanURL;
 
+    public static MenuChatManager instance;
+
 
     private List<GameObject> ChatPrefabs;
 
@@ -26,6 +29,7 @@ public class MenuChatManager : MonoBehaviour
 
     private void Awake()
     {
+        if (instance == null) instance = this;
         SendBirdManager.onConnected += Enter;
     }
     public void CreateClan(string ClanName)
@@ -47,8 +51,16 @@ public class MenuChatManager : MonoBehaviour
 
     public void SendMessage()
     {
-        string Message = ChatText.text;
-        SendBirdManager.instance.SendMessage(Message);
+        if ((ChatText.text).Trim().Length == 0)
+        {
+            Debug.Log("Message is empty!");
+        }
+        else
+        {
+            string Message = ChatText.text;
+            ChatText.text = "";
+            SendBirdManager.instance.SendMessage(Message);
+        }
     }
 
     public void Leave()
@@ -59,6 +71,14 @@ public class MenuChatManager : MonoBehaviour
     public void CreateClan()
     {
         SendBirdManager.instance.CreateClan(ClanMembers);
+    }
+
+    public void spawnChat(string User, string Message)
+    {
+        var Chat = Instantiate(ChatPrefab);
+        Chat.GetComponentInChildren<TextMeshProUGUI>().text = User + ":" + Message;
+        Chat.transform.SetParent(ChatArea.transform);
+        ChatArea.GetComponent<RectTransform>().sizeDelta = new Vector2(ChatArea.GetComponent<RectTransform>().sizeDelta.x, ChatArea.GetComponent<RectTransform>().sizeDelta.y+30);
     }
 
 

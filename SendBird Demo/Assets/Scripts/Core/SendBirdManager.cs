@@ -10,6 +10,8 @@ public class SendBirdManager : MonoBehaviour
 {
     public static SendBirdManager instance;
 
+    public int MessageLoadLimit;
+
     public delegate void OnConnected();
     public static OnConnected onConnected;
 
@@ -89,9 +91,8 @@ public class SendBirdManager : MonoBehaviour
     {
         SendBirdClient.ChannelHandler channelHandler = new SendBirdClient.ChannelHandler();
 
-        channelHandler.OnMessageReceived = (BaseChannel baseChannel, BaseMessage baseMessage) => { 
-            Debug.Log(baseMessage.UserId);
-            Debug.Log(baseMessage.Message);
+        channelHandler.OnMessageReceived = (BaseChannel baseChannel, BaseMessage baseMessage) => {
+            MenuChatManager.instance.spawnChat(baseMessage.GetSender().Nickname, baseMessage.Message);
         };
         SendBirdClient.AddChannelHandler("UniqueID", channelHandler);
     }
@@ -174,7 +175,27 @@ public class SendBirdManager : MonoBehaviour
         GroupChannel.GetChannel(ClanURL, (GroupChannel groupChannel, SendBirdException e) =>
         {
             if (e != null) Debug.LogError(e);
-            else Debug.Log("Entered Successfully");
+            else
+            {
+                Debug.Log("Entered Successfully");
+                currentClan = groupChannel;
+
+                PreviousMessageListQuery mListQuery = groupChannel.CreatePreviousMessageListQuery();
+                mListQuery.Load(MessageLoadLimit, true, (List<BaseMessage> messages, SendBirdException e) =>
+                {
+
+                    if (e != null) { Debug.Log(e); }
+                    else
+                    {
+                        messages.Reverse();
+                        foreach(BaseMessage message in messages)
+                        {
+                            MenuChatManager.instance.spawnChat(message.GetSender().Nickname, message.Message);
+                        }
+                    }
+                
+                });
+            }
         });
     }
     #endregion
@@ -185,6 +206,11 @@ public class SendBirdManager : MonoBehaviour
         currentClan.SendUserMessage(Message, "Message", (UserMessage userMessage, SendBirdException e) =>
         {
             if (e != null) Debug.Log(e);
+            else
+            {
+                MenuChatManager.instance.spawnChat(userMessage.GetSender().Nickname, userMessage.Message);
+                Debug.Log("Message Sent");
+            }
         });
     }
 
